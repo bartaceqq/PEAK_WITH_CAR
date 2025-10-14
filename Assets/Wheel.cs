@@ -10,7 +10,7 @@ public class Wheel : MonoBehaviour
     {
         if(wheelTurn == true)
         {
-            wheelMesh.localEulerAngles = new Vector3(wheelMesh.localEulerAngles.x, wheelCollider.steerAngle - wheelMesh.localEulerAngles.z, wheelMesh.localEulerAngles.z);
+            wheelMesh.localEulerAngles = new Vector3(wheelMesh.localEulerAngles.x, wheelCollider.steerAngle - 2 * wheelMesh.localEulerAngles.z, wheelMesh.localEulerAngles.z);
         }
         wheelMesh.Rotate(0, wheelCollider.rpm / 60 * 360 * Time.deltaTime, 0);
     }
