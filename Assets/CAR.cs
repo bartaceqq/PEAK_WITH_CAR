@@ -1,110 +1,191 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CAR : MonoBehaviour
 {
+    public GameObject car;
+
+    private float currentNeedleAngle = 0f;
+
     [Header("Physics")]
     [SerializeField] float extraGravityMultiplier = 2f;
     public Rigidbody rigid;
-    public Transform COM; // assign in Inspector (slightly below center)
+    public Transform COM;
 
     [Header("Wheels")]
-    public WheelCollider wheel1, wheel2, wheel3, wheel4;
-    public float drivespeed = 500f;
-    public float steerspeed = 30f;
+    public WheelCollider wheelFL, wheelFR, wheelRL, wheelRR;
 
-    [Header("Anti-roll & Stability")]
-    [SerializeField] float antiRollFront = 8000f;
-    [SerializeField] float antiRollRear = 10000f;
-    [SerializeField] float baseExtraG = 1.2f;
-    [SerializeField] float extraGAtSpeed = 1.8f;
-    [SerializeField] float highSpeedKmh = 80f;
+    [Header("Settings")]
+    public float driveTorque = 500f;
+    public float brakeForce = 3000f;
+    public float handbrakeForce = 5000f;
+    public float steerAngle = 30f;
+    public KeyCode resetKey = KeyCode.R;
 
-    float horizontalInput;
-    float verticalInput;
+    public Image highlightSquare;       // assign the child Image
+    public float growSpeed = 3f;        // how fast the square grows
+    public float maxScale = 1f;
+
+    [Header("Speedometer / Tachometer")]
+    public float maxSpeedKmh = 100f;     // Maximum speed
+    public RectTransform needle;         // Assign the needle Image
+    public float minNeedleAngle = -90f;  // Angle for 0 km/h
+    public float maxNeedleAngle = 90f;   // Angle for 100 km/h
+
+    float hInput;
+    float vInput;
+    bool handbrake;
+    private float currentScale = 0f;
+
+    // Store original position and rotation for reset
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
 
     void Start()
     {
-        if (rigid)
-        {
-            // center of mass
-            if (COM != null)
-                rigid.centerOfMass = transform.InverseTransformPoint(COM.position);
+        if (rigid && COM)
+            rigid.centerOfMass = transform.InverseTransformPoint(COM.position);
 
-            // physics setup
-            rigid.interpolation = RigidbodyInterpolation.Interpolate;
-            rigid.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            rigid.angularDamping = 0.6f; // slightly damp rotation
-            rigid.solverIterations = 12;
-            rigid.solverVelocityIterations = 12;
-        }
+        if (highlightSquare != null)
+            highlightSquare.enabled = false;
+
+        // Save original car position and rotation
+        originalPosition = car.transform.position;
+        originalRotation = car.transform.rotation;
     }
 
     void Update()
     {
-        // cache inputs (old Input Manager)
-        horizontalInput = Input.GetAxis("Horizontal");
-        verticalInput = Input.GetAxis("Vertical");
+        if (Input.GetKey(resetKey))
+        {
+            if (!highlightSquare.enabled)
+                highlightSquare.enabled = true;
+
+            // grow toward max scale
+            currentScale = Mathf.MoveTowards(currentScale, maxScale, Time.deltaTime * growSpeed);
+            highlightSquare.rectTransform.localScale = Vector3.one * currentScale;
+
+            // Reset car when highlight is fully grown
+            if (currentScale >= maxScale)
+            {
+                ResetCar();
+                currentScale = 0f;
+            }
+        }
+        else
+        {
+            // shrink back
+            currentScale = Mathf.MoveTowards(currentScale, 0f, Time.deltaTime * growSpeed);
+
+            // hide when fully shrunk
+            if (currentScale <= 0.01f && highlightSquare.enabled)
+                highlightSquare.enabled = false;
+
+            highlightSquare.rectTransform.localScale = Vector3.one * currentScale;
+        }
+
+        // --- Input ---
+        hInput = Input.GetAxis("Horizontal");
+        vInput = Input.GetAxis("Vertical");
+        handbrake = Input.GetKey(KeyCode.Space);
     }
 
     void FixedUpdate()
     {
-        // --- Ground checks ---
-        bool flG = wheel1.GetGroundHit(out WheelHit hitFL);
-        bool frG = wheel2.GetGroundHit(out WheelHit hitFR);
-        bool rlG = wheel3.GetGroundHit(out WheelHit hitRL);
-        bool rrG = wheel4.GetGroundHit(out WheelHit hitRR);
+        // --- Extra Gravity ---
+        rigid.AddForce(Vector3.down * extraGravityMultiplier * Physics.gravity.magnitude, ForceMode.Acceleration);
 
-        float speedKmh = rigid.linearVelocity.magnitude * 3.6f;
-        float speedLerp = Mathf.InverseLerp(0f, highSpeedKmh, speedKmh);
+        // --- Steering ---
+        float steer = hInput * steerAngle;
+        wheelFL.steerAngle = steer;
+        wheelFR.steerAngle = steer;
 
-        // --- Drift factor (based on sideways slip) ---
-        float drift = 0f;
-        if (flG) drift = Mathf.Max(drift, Mathf.Abs(hitFL.sidewaysSlip));
-        if (frG) drift = Mathf.Max(drift, Mathf.Abs(hitFR.sidewaysSlip));
-        if (rlG) drift = Mathf.Max(drift, Mathf.Abs(hitRL.sidewaysSlip));
-        if (rrG) drift = Mathf.Max(drift, Mathf.Abs(hitRR.sidewaysSlip));
-        float driftFactor = Mathf.InverseLerp(0.15f, 0.6f, drift);
+        // --- Current speed (in km/h) ---
+        float currentSpeedKmh = rigid.linearVelocity.magnitude * 3.6f; // convert from m/s → km/h
 
-        // --- Adaptive extra gravity ---
-        if (flG || frG || rlG || rrG)
+        // --- Speed Limiter (cap at 100 km/h) ---
+        if (currentSpeedKmh > maxSpeedKmh)
         {
-            float extraG = Mathf.Lerp(baseExtraG, extraGAtSpeed, speedLerp);
-            extraG *= Mathf.Lerp(1f, 0.6f, driftFactor); // less "glue" when drifting
-            rigid.AddForce(Physics.gravity * extraGravityMultiplier * extraG, ForceMode.Acceleration);
+            // Clamp the velocity vector to the max speed
+            rigid.linearVelocity = rigid.linearVelocity.normalized * (maxSpeedKmh / 3.6f);
+            currentSpeedKmh = maxSpeedKmh;
         }
 
-        // --- Drive and steer ---
-        float motor = verticalInput * drivespeed;
-        wheel1.motorTorque = motor;
-        wheel2.motorTorque = motor;
-        wheel3.motorTorque = motor;
-        wheel4.motorTorque = motor;
+        // --- Drive / Brake Logic ---
+        float motorTorque = 0f;
+        float brakeTorque = 0f;
 
-        float steer = steerspeed * horizontalInput;
-        wheel1.steerAngle = steer;
-        wheel2.steerAngle = steer;
+        if (vInput > 0f)
+        {
+            motorTorque = vInput * driveTorque;
+            brakeTorque = 0f;
+        }
+        else if (vInput < 0f)
+        {
+            motorTorque = vInput * (driveTorque * 0.6f);
+            brakeTorque = 0f;
+        }
+        else
+        {
+            motorTorque = 0f;
+            brakeTorque = 100f;
+        }
 
-        // --- Anti-roll (scales down during drifts) ---
-        ApplyAntiRoll(wheel1, wheel2, antiRollFront * Mathf.Lerp(1f, 0.4f, driftFactor)); // front
-        ApplyAntiRoll(wheel3, wheel4, antiRollRear * Mathf.Lerp(1f, 0.4f, driftFactor));  // rear
+        // --- Handbrake ---
+        if (handbrake)
+        {
+            wheelRL.brakeTorque = handbrakeForce;
+            wheelRR.brakeTorque = handbrakeForce;
+        }
+        else
+        {
+            wheelRL.brakeTorque = brakeTorque;
+            wheelRR.brakeTorque = brakeTorque;
+        }
+
+        // --- Apply drive torque (RWD) ---
+        wheelFL.motorTorque = motorTorque * 0.5f;
+        wheelFR.motorTorque = motorTorque * 0.5f;
+        wheelRL.motorTorque = motorTorque;
+        wheelRR.motorTorque = motorTorque;
+
+        // --- Light braking for front wheels too ---
+        wheelFL.brakeTorque = brakeTorque;
+        wheelFR.brakeTorque = brakeTorque;
+
+        // --- Update tachometer needle ---
+        UpdateTachometer(currentSpeedKmh);
     }
 
-    void ApplyAntiRoll(WheelCollider left, WheelCollider right, float force)
+    // --- Tachometer Needle Rotation ---
+    void UpdateTachometer(float speedKmh)
     {
-        float travelL = 1f, travelR = 1f;
-        bool lG = left.GetGroundHit(out WheelHit hitL);
-        bool rG = right.GetGroundHit(out WheelHit hitR);
+        if (needle == null) return;
 
-        if (lG)
-            travelL = (-left.transform.InverseTransformPoint(hitL.point).y - left.radius) / left.suspensionDistance;
-        if (rG)
-            travelR = (-right.transform.InverseTransformPoint(hitR.point).y - right.radius) / right.suspensionDistance;
+        // Normalize speed between 0 and 1
+        float t = Mathf.InverseLerp(0f, maxSpeedKmh, speedKmh);
 
-        float antiRoll = (travelL - travelR) * force;
+        // Calculate rotation angle
+        float targetAngle = Mathf.Lerp(minNeedleAngle, maxNeedleAngle, t);
 
-        if (lG) rigid.AddForceAtPosition(left.transform.up * -antiRoll, left.transform.position);
-        if (rG) rigid.AddForceAtPosition(right.transform.up *  antiRoll, right.transform.position);
+        // Smooth rotation for realism
+        currentNeedleAngle = Mathf.LerpAngle(currentNeedleAngle, targetAngle, Time.deltaTime * 5f);
+
+        // Apply rotation (pivot should be bottom-center)
+        needle.localRotation = Quaternion.Euler(0f, 0f, currentNeedleAngle);
+    }
+
+    // --- Reset Car ---
+    void ResetCar()
+    {
+        rigid.linearVelocity = Vector3.zero;
+        rigid.angularVelocity = Vector3.zero;
+        car.transform.position = originalPosition;
+        car.transform.rotation = originalRotation;
+
+        wheelFL.steerAngle = 0f;
+        wheelFR.steerAngle = 0f;
+        wheelRL.brakeTorque = 0f;
+        wheelRR.brakeTorque = 0f;
     }
 }
