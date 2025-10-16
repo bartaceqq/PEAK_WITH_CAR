@@ -754,11 +754,11 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.14119631, y: -0, z: -0, w: 0.98998165}
-  m_LocalPosition: {x: -2.8468199, y: 10.17, z: -4.34095}
+  m_LocalPosition: {x: -0.77, y: 10.17, z: 1.0099998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 867306414}
   m_LocalEulerAnglesHint: {x: 16.234, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
@@ -2358,6 +2358,7 @@ Transform:
   - {fileID: 1074458664}
   - {fileID: 1337219526}
   - {fileID: 546373162}
+  - {fileID: 330585546}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &867306415
@@ -2372,7 +2373,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0c82c5218cd5694cbc8b4644b51968e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  car: {fileID: 0}
+  car: {fileID: 387788708}
   gas: {fileID: 867306416}
   extraGravityMultiplier: 1
   rigid: {fileID: 867306413}
@@ -2382,8 +2383,8 @@ MonoBehaviour:
   wheelRL: {fileID: 125990781}
   wheelRR: {fileID: 512640819}
   driveTorque: 4000
-  brakeForce: 3000
-  handbrakeForce: 20000
+  brakeForce: 20000
+  handbrakeForce: 100000
   steerAngle: 20
   resetKey: 114
   highlightSquare: {fileID: 272470062}
@@ -2397,6 +2398,11 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  minFlipDriftSpeedKmh: 60
+  minRollAngleDeg: 40
+  lateralDamp: 50
+  angDamp: 10
+  uprightTorque: 0.5
 --- !u!114 &867306416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3390,7 +3396,7 @@ Transform:
   m_GameObject: {fileID: 1922306775}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 53, y: -5, z: 0}
+  m_LocalPosition: {x: 53, y: -16.98, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3422,7 +3428,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f89ed38712951f6449f4f6c95d700d1c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 74.80023
+      value: 61.87
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f89ed38712951f6449f4f6c95d700d1c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3638,7 +3644,6 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 629423550}
-  - {fileID: 330585546}
   - {fileID: 867306414}
   - {fileID: 576874011}
   - {fileID: 1922306778}

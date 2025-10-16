@@ -21,6 +21,10 @@ public class CAR : MonoBehaviour
     public float brakeForce = 3000f;
     public float handbrakeForce = 5000f;
     public float steerAngle = 30f;
+
+    // NEW: make steering smooth & self-centering
+    [Range(0.1f, 50f)] public float steerInRate = 15f;      // how fast we reach target steer
+    [Range(0.1f, 50f)] public float steerReturnRate = 20f;  // how fast we return to center
     public KeyCode resetKey = KeyCode.R;
 
     public Image highlightSquare;
@@ -37,6 +41,14 @@ public class CAR : MonoBehaviour
     public float resetHeightOffset = 0.4f;
     public LayerMask groundMask = ~0;
 
+    // === Flip/Drift Guard (reworked to not fight steering) ===
+    [Header("Flip/Drift Guard")]
+    public float minFlipDriftSpeedKmh = 60f; // must be above this speed
+    public float minRollAngleDeg = 40f;      // AND absolute Z roll must be >= this
+    public float lateralDamp = 50f;          // base sideways damping
+    public float angDamp = 10f;              // roll/pitch damping
+    public float uprightTorque = 0.5f;       // uprighting torque scale
+
     float hInput;
     float vInput;
     bool handbrake;
@@ -45,6 +57,9 @@ public class CAR : MonoBehaviour
 
     Vector3 originalPosition;
     Quaternion originalRotation;
+
+    // NEW: cached steering value so it can’t “stick”
+    float currentSteerDeg = 0f;
 
     void Start()
     {
@@ -97,8 +112,9 @@ public class CAR : MonoBehaviour
             }
         }
 
-        hInput = Input.GetAxis("Horizontal");
-        vInput = Input.GetAxis("Vertical");
+        // raw feels snappier and avoids rare smoothing “hangs”
+        hInput = Input.GetAxisRaw("Horizontal");
+        vInput = Input.GetAxisRaw("Vertical");
         handbrake = Input.GetKey(KeyCode.Space);
     }
 
@@ -119,11 +135,6 @@ public class CAR : MonoBehaviour
         float downforce = rigid.linearVelocity.magnitude * 15f;
         rigid.AddForce(-transform.up * downforce);
 
-        // --- Steering ---
-        float steer = hInput * steerAngle;
-        if (wheelFL) wheelFL.steerAngle = steer;
-        if (wheelFR) wheelFR.steerAngle = steer;
-
         // --- Current Speed (km/h) ---
         float currentSpeedKmh = rigid.linearVelocity.magnitude * 3.6f;
 
@@ -132,6 +143,49 @@ public class CAR : MonoBehaviour
         {
             rigid.linearVelocity = rigid.linearVelocity.normalized * (maxSpeedKmh / 3.6f);
             currentSpeedKmh = maxSpeedKmh;
+        }
+
+        // --- Smooth Steering with return-to-center (prevents “stuck angle”) ---
+        float targetSteer = hInput * steerAngle;
+        float rate = (Mathf.Abs(hInput) > 0.01f) ? steerInRate : steerReturnRate;
+        currentSteerDeg = Mathf.MoveTowards(currentSteerDeg, targetSteer, rate * Time.fixedDeltaTime);
+
+        // snap exactly to zero when near center (removes tiny residuals)
+        if (Mathf.Abs(currentSteerDeg) < 0.05f && Mathf.Abs(hInput) < 0.01f)
+            currentSteerDeg = 0f;
+
+        if (wheelFL) wheelFL.steerAngle = currentSteerDeg;
+        if (wheelFR) wheelFR.steerAngle = currentSteerDeg;
+
+        // === Flip/Drift Guard: don’t fight while actively steering ===
+        bool allowFlipDrift = (GetRollZAbs() >= minRollAngleDeg) && (currentSpeedKmh > minFlipDriftSpeedKmh);
+        bool activeSteer = Mathf.Abs(hInput) > 0.15f; // treat as user intends to steer
+
+        if (!allowFlipDrift && !activeSteer)
+        {
+            // lateral damping scaled by speed; very gentle at low speed
+            float speed01 = Mathf.InverseLerp(0f, 50f, currentSpeedKmh);
+            float scaledLateralDamp = Mathf.Lerp(lateralDamp * 0.25f, lateralDamp, speed01);
+
+            // 1) Kill lateral (sideways) sliding to prevent drifting
+            Vector3 localVel = transform.InverseTransformDirection(rigid.linearVelocity);
+            localVel.x = Mathf.MoveTowards(localVel.x, 0f, Time.fixedDeltaTime * scaledLateralDamp);
+            rigid.linearVelocity = transform.TransformDirection(localVel);
+
+            // 2) Dampen roll/pitch spin so it won't flip
+            Vector3 av = rigid.angularVelocity;
+            av.x = Mathf.MoveTowards(av.x, 0f, Time.fixedDeltaTime * angDamp); // pitch
+            av.z = Mathf.MoveTowards(av.z, 0f, Time.fixedDeltaTime * angDamp); // roll
+            rigid.angularVelocity = av;
+
+            // 3) Uprighting torque (align car up to world up smoothly)
+            Quaternion toUpright = Quaternion.FromToRotation(transform.up, Vector3.up);
+            toUpright.ToAngleAxis(out float angle, out Vector3 axis);
+            if (angle > 0.01f)
+            {
+                float torqueMag = Mathf.Deg2Rad * angle * uprightTorque;
+                rigid.AddTorque(axis * torqueMag, ForceMode.Acceleration);
+            }
         }
 
         // --- Drive / Brake Logic ---
@@ -191,6 +245,13 @@ public class CAR : MonoBehaviour
 
         // --- Update Tachometer ---
         UpdateTachometer(currentSpeedKmh);
+    }
+
+    // --- Helper: absolute Z roll in degrees (0..180) ---
+    float GetRollZAbs()
+    {
+        float z = Mathf.DeltaAngle(0f, transform.eulerAngles.z);
+        return Mathf.Abs(z);
     }
 
     // --- Rollover Torque ---
@@ -272,5 +333,10 @@ public class CAR : MonoBehaviour
         rigid.transform.SetPositionAndRotation(targetPos, targetRot);
         rigid.isKinematic = wasKinematic;
         rigid.Sleep();
+
+        // ensure steering is fully centered after a reset
+        currentSteerDeg = 0f;
+        if (wheelFL) wheelFL.steerAngle = 0f;
+        if (wheelFR) wheelFR.steerAngle = 0f;
     }
 }
