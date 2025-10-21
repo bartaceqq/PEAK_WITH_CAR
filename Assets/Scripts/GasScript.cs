@@ -3,8 +3,8 @@ using UnityEngine.UI;
 
 public class GasScript : MonoBehaviour
 {
-    [Header("References")]
-    public CAR car;                     // drag your CAR here
+    [Header("References")] 
+    public Car_Controller car;                    // drag your CAR here
     public RectTransform backBar;       // white bar (background)
     public RectTransform gasBar;        // yellow bar (foreground)
 
