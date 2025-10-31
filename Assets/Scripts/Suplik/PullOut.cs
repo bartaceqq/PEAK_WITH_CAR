@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PullOut : MonoBehaviour
 {
+    
     public bool isout = false;
 
     [SerializeField]private GameObject _drawer;
