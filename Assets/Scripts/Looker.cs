@@ -1,5 +1,6 @@
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Looker : MonoBehaviour
 {
@@ -28,27 +29,39 @@ public class Looker : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
         {
-            if (hit.collider.CompareTag("drawer"))
+            switch (hit.collider.gameObject.tag)
             {
-                grabbing = true;
+              case "drawer":
+                  grabbing = true;
               
 
-                PullOut pullOut = hit.collider.GetComponent<PullOut>();
+                  PullOut pullOut = hit.collider.GetComponent<PullOut>();
                
-                    if (Input.GetKeyDown(KeyCode.E) && !lookingatitem)
-                    {
-                        pullOut.pullthedrawer();
+                  if (Input.GetKeyDown(KeyCode.E) && !lookingatitem)
+                  {
+                      pullOut.pullthedrawer();
                         
-                    }
-                
+                  }
+                  break;
+              
+              case "monitor":
+                  grabbing = true;
+                  if (Input.GetKeyDown(KeyCode.E) )
+                  {
+                      Cursor.lockState = CursorLockMode.None;  // Unlocks the mouse
+                      Cursor.visible = true;  
+                      SceneManager.LoadScene(1);
+                  }
+
+                  break;
+              default:
+                  grabbing = false;
+                  break;
             }
+         
            
 
-            else
-            {
-                grabbing = false;
-              
-            }
+         
         }
         else
         {
@@ -68,9 +81,7 @@ public class Looker : MonoBehaviour
                 grabbing = true;
                 
 
-                if (hitItem != null)
-                {
-                    bool canacces = false;
+                bool canacces = false;
                     Transform parent = hit2.collider.transform.parent;
 
                     if (parent != null)
@@ -106,9 +117,13 @@ public class Looker : MonoBehaviour
                     // ✅ Pickup happens when pressing E while looking at the current item
                     if (Input.GetKeyDown(KeyCode.E))
                     {
+                        if (!collectable_Item.collected)
+                        {
+                            
+                        
                         inventory.AddItem(collectable_Item);
                         collectable_Item.PickUp();
-                    }
+                    }}
                 }
 
 
@@ -116,7 +131,7 @@ public class Looker : MonoBehaviour
                 collectable_Item = hitItem;
                 collectable_Item.Highlight(true);
                 lookingatitem = true;
-            }}
+            }
         }
         else
         {
