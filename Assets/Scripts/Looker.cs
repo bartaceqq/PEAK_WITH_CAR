@@ -119,9 +119,8 @@ public class Looker : MonoBehaviour
                     {
                         if (!collectable_Item.collected)
                         {
-                            
-                        
-                        inventory.AddItem(collectable_Item);
+
+                            inventory.AddItem(collectable_Item);
                         collectable_Item.PickUp();
                     }}
                 }

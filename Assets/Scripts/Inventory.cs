@@ -5,13 +5,40 @@ using UnityEngine.UI;
 public class Inventory : MonoBehaviour
 {
     public List<Collectable_Item> items = new List<Collectable_Item>();
-    public List<Slot> slots = new List<Slot>();
+    public List<Slot> slots;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        // Restore saved items
+        if (StaticData.items != null)
+            items = StaticData.items;
+        else
+            items = new List<Collectable_Item>();
+
+        // 🔧 Try to automatically find all slots if not assigned
+        if (slots == null || slots.Count == 0)
+        {
+            slots = new List<Slot>(FindObjectsOfType<Slot>());
+            Debug.Log("Inventory: Found " + slots.Count + " slots automatically.");
+        }
+
+        // Rebuild the UI for any saved items
+        foreach (Collectable_Item item in items)
+        {
+            foreach (Slot slot in slots)
+            {
+                if (!slot.isoccupied)
+                {
+                    slot.setTexture(item.texture);
+                    slot.item = item;
+                    slot.itemid = item.item_id;
+                    break;
+                }
+            }
+        }
     }
 
+    
     // Update is called once per frame
     void Update()
     {
@@ -29,9 +56,12 @@ public class Inventory : MonoBehaviour
                slot.item = item;
                slot.itemid = item.item_id;
                items.Add(item);
+               StaticData.items = items;
+               StaticData.slotscontainssomething = true;
+               StaticData.slots = slots;
                break;
             }
         }
-    }
+    }   
     
 }

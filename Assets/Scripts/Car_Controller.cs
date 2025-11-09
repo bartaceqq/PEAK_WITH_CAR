@@ -4,13 +4,17 @@ using Image = UnityEngine.UI.Image;
 
 public class Car_Controller : MonoBehaviour
 {
+    
     [SerializeField] private GameObject Car;
     [Header("Wheel Colliders")]
     public WheelCollider frontLeftWheel;
     public WheelCollider frontRightWheel;
     public WheelCollider rearLeftWheel;
     public WheelCollider rearRightWheel;
-
+    
+    [Header("Player Movement")]
+    public GameObject player;
+    
     [Header("Car Settings")]
     public float motorPower = 150f;
     public float brakePower = 300f;
@@ -68,7 +72,14 @@ public class Car_Controller : MonoBehaviour
     }
 
     void Update()
-    {   float speedKmh = rigid.linearVelocity.magnitude * 3.6f;
+    
+    {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Debug.Log("pressed T");
+            ExitCar();
+        }
+        float speedKmh = rigid.linearVelocity.magnitude * 3.6f;
         Debug.Log(speedKmh);
         if (Input.GetKey(KeyCode.F))
         {
@@ -113,6 +124,7 @@ public class Car_Controller : MonoBehaviour
 
     void FixedUpdate()
     {
+     
         if (!rigid) return;
 
         float throttle = Input.GetAxis("Vertical");
@@ -217,6 +229,28 @@ public class Car_Controller : MonoBehaviour
         rigid.transform.SetPositionAndRotation(targetPos, targetRot);
         rigid.isKinematic = wasKin;
         rigid.Sleep();
+    }
+
+    public void ExitCar()
+    {
+     
+            rigid.linearVelocity = Vector3.zero;
+            rigid.angularVelocity = Vector3.zero;
+        
+
+       
+            speeder.speeder = 0;
+            speeder.enabled = false;
+        
+            gas.enabled = false;
+
+        // Activate player
+       
+            player.SetActive(true);
+            PlayerMovement pm = player.GetComponent<PlayerMovement>();
+            if (pm != null)
+                pm.TurnOffCarProperities();
+        
     }
 
     public void ResetToSpawnNow() => DoPhysicsSafeReset();

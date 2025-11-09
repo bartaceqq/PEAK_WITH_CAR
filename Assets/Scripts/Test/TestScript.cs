@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody))]
 public class TestScript : MonoBehaviour
@@ -37,6 +38,12 @@ public class TestScript : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            Cursor.lockState = CursorLockMode.None;  // Unlocks the mouse
+            Cursor.visible = true;  
+            SceneManager.LoadScene(4);
+        }
         HandleMouseLook();
     }
 
