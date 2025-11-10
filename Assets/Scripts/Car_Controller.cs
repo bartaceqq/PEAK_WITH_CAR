@@ -1,4 +1,4 @@
-using UnityEngine;
+    using UnityEngine;
 using UnityEngine.UIElements;
 using Image = UnityEngine.UI.Image;
 
@@ -76,7 +76,7 @@ public class Car_Controller : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.T))
         {
-            PlayerMovement pm = player.GetComponent<PlayerMovement>();
+            PlayerController pm = player.GetComponent<PlayerController>();
             if (!pm.switched)
             {
                 Debug.Log("pressed T in car");
@@ -252,9 +252,9 @@ public class Car_Controller : MonoBehaviour
         // Activate player
        
             player.SetActive(true);
-            PlayerMovement pm = player.GetComponent<PlayerMovement>();
+            PlayerController pm = player.GetComponent<PlayerController>();
             if (pm != null)
-                pm.Switch();
+                pm.HandleCarSwitch();
         
     }
 

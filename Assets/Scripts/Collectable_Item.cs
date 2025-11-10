@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class Collectable_Item : MonoBehaviour
 {
+    public Collectable_Item holding_item;
     [Header("Inventory & Settings")]
     public Texture texture;
     [SerializeField] private GameObject item_object;   // kept
@@ -16,7 +17,7 @@ public class Collectable_Item : MonoBehaviour
     public float followSmoothness = 15f;                         // follow lerp
 
     private Renderer itemRenderer;
-    private Color originalColor;
+    private Color originalColor;        
 
     // Hold/follow internals
     private bool isHeld = false;
