@@ -76,11 +76,16 @@ public class Car_Controller : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.T))
         {
-            Debug.Log("pressed T");
-            ExitCar();
+            PlayerMovement pm = player.GetComponent<PlayerMovement>();
+            if (!pm.switched)
+            {
+                Debug.Log("pressed T in car");
+                ExitCar(); 
+            }
+            
         }
         float speedKmh = rigid.linearVelocity.magnitude * 3.6f;
-        Debug.Log(speedKmh);
+        
         if (Input.GetKey(KeyCode.F))
         {
          
@@ -249,8 +254,16 @@ public class Car_Controller : MonoBehaviour
             player.SetActive(true);
             PlayerMovement pm = player.GetComponent<PlayerMovement>();
             if (pm != null)
-                pm.TurnOffCarProperities();
+                pm.Switch();
         
+    }
+
+    public void EnterCar()
+    {
+        speeder.speeder = 0;
+        speeder.enabled = true;
+        
+        gas.enabled = true;
     }
 
     public void ResetToSpawnNow() => DoPhysicsSafeReset();

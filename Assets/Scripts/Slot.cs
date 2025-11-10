@@ -3,23 +3,24 @@ using UnityEngine.UI;
 
 public class Slot : MonoBehaviour
 {
+    [Header("Slot Settings")]
+    public Transform playerTransform;
+    public KeyCode input = KeyCode.T;  // you can assign this in Inspector (e.g. Alpha1, Alpha2, etc.)
     public bool isoccupied = false;
-    public int itemid;
+    public int itemId;
     public RawImage image;
     public Collectable_Item item;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown(input) && item != null)
+        {
+            // Toggle hold/drop
+            item.ToggleHold(playerTransform);
+        }
     }
 
-    public void setTexture(Texture texture)
+    public void SetTexture(Texture texture)
     {
         image.texture = texture;
         isoccupied = true;

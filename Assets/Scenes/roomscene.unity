@@ -2795,10 +2795,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   texture: {fileID: 2800000, guid: e472ebcb99516ac4ca204deb64cf3362, type: 3}
-  item_object: {fileID: 2105026642}
-  inventory: {fileID: 661451260}
+  item_object: {fileID: 0}
+  inventory: {fileID: 0}
   collected: 0
   item_id: 1
+  offsetPosition: {x: 0, y: -0.3, z: 1}
+  offsetRotation: {x: 0, y: 0, z: 0}
+  heldScale: {x: 1, y: 1, z: 1}
+  followSmoothness: 15
 --- !u!64 &2105026647
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2829,6 +2833,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 418395708485234259, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 418395708485234259, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 418395708485234259, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
     - target: {fileID: 2470119574327959365, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -2909,10 +2925,70 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3606276708440232105, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 49
+      objectReference: {fileID: 0}
+    - target: {fileID: 3606276708440232105, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 49
+      objectReference: {fileID: 0}
+    - target: {fileID: 3606276708440232105, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
+    - target: {fileID: 5278104160493461334, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 52
+      objectReference: {fileID: 0}
+    - target: {fileID: 5278104160493461334, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 52
+      objectReference: {fileID: 0}
+    - target: {fileID: 5278104160493461334, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
+    - target: {fileID: 5414658363284718300, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 53
+      objectReference: {fileID: 0}
+    - target: {fileID: 5414658363284718300, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 53
+      objectReference: {fileID: 0}
+    - target: {fileID: 5414658363284718300, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
     - target: {fileID: 7776448127430901131, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 8351994793391677459, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 54
+      objectReference: {fileID: 0}
+    - target: {fileID: 8351994793391677459, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 54
+      objectReference: {fileID: 0}
+    - target: {fileID: 8351994793391677459, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
+    - target: {fileID: 8489924511515004082, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: Input
+      value: 51
+      objectReference: {fileID: 0}
+    - target: {fileID: 8489924511515004082, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: input
+      value: 51
+      objectReference: {fileID: 0}
+    - target: {fileID: 8489924511515004082, guid: 627f4805ee4fe4043aff2dfe7d5758e5, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 546362951}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

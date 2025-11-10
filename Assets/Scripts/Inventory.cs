@@ -29,9 +29,9 @@ public class Inventory : MonoBehaviour
             {
                 if (!slot.isoccupied)
                 {
-                    slot.setTexture(item.texture);
+                    slot.SetTexture(item.texture);
                     slot.item = item;
-                    slot.itemid = item.item_id;
+                    slot.itemId = item.item_id;
                     break;
                 }
             }
@@ -52,9 +52,9 @@ public class Inventory : MonoBehaviour
         {
             if (!slot.isoccupied)
             {
-               slot.setTexture(item.texture);
+               slot.SetTexture(item.texture);
                slot.item = item;
-               slot.itemid = item.item_id;
+               slot.itemId = item.item_id;
                items.Add(item);
                StaticData.items = items;
                StaticData.slotscontainssomething = true;

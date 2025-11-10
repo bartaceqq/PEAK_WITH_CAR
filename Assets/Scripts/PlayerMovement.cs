@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
+    public Car_Controller CarController;
+    public bool switched = false;
     [Header("UI & Camera")]
     public GameObject CarUI;
     public Camera CarCamera;
@@ -44,6 +46,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Debug.Log("press T in playermovement");
+            Switch();
+            CarController.EnterCar();
+        }
         HandleMovement();
         HandleMouseLook();
         HandleItemInteraction();
@@ -150,12 +158,25 @@ public class PlayerMovement : MonoBehaviour
 
         // Optional: add interactions for drawers or monitors like in your Looker script
     }
-
-    public void TurnOffCarProperities()
+    
+    public void Switch()
     {
-        CarUI.SetActive(false);
-        CarCamera.enabled = false;
-        PlayerCanvas.SetActive(true);
+        if (!switched)
+        {
+            CarUI.SetActive(false);
+            CarCamera.enabled = false;
+            PlayerCanvas.SetActive(true);
+            switched = true;
+        }
+        else
+        {
+            switched = false;
+            CarUI.SetActive(true);
+            CarCamera.enabled = true;
+            PlayerCanvas.SetActive(false); 
+        }
+        
     }
+    
 }
     
