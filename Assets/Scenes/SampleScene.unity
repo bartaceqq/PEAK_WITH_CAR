@@ -448,6 +448,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1507911381}
     - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: controller
+      value: 
+      objectReference: {fileID: 502910038}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
       propertyPath: PlayerCanvas
       value: 
       objectReference: {fileID: 1607595745}
@@ -459,6 +463,14 @@ PrefabInstance:
       propertyPath: cursor_manager
       value: 
       objectReference: {fileID: 848217886}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: items.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: 'items.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1938264068}
     - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
       propertyPath: itemstouse.Array.size
       value: 1
@@ -1003,6 +1015,11 @@ MonoBehaviour:
 --- !u!4 &502910037 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6236116731240124948, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+  m_PrefabInstance: {fileID: 223648776}
+  m_PrefabAsset: {fileID: 0}
+--- !u!143 &502910038 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 4598873420625441882, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
   m_PrefabInstance: {fileID: 223648776}
   m_PrefabAsset: {fileID: 0}
 --- !u!146 &512578737 stripped
@@ -2932,6 +2949,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5610338393de17d40ae814b6456a4b71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  items: []
   slots:
   - {fileID: 190829048}
   - {fileID: 1614065547}

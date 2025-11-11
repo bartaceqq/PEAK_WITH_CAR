@@ -6,9 +6,14 @@ public class Inventory : MonoBehaviour
 {
     public List<Collectable_Item> items = new List<Collectable_Item>();
     public List<Slot> slots;
+    public Dictionary<int, Collectable_Item> item_map = new Dictionary<int, Collectable_Item>();
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        if (StaticData.item_map != null)
+            this.item_map = StaticData.item_map;
+        else
+            StaticData.item_map = new Dictionary<int, Collectable_Item>();
         // Restore saved items
         if (StaticData.items != null)
             items = StaticData.items;
@@ -59,6 +64,7 @@ public class Inventory : MonoBehaviour
                StaticData.items = items;
                StaticData.slotscontainssomething = true;
                StaticData.slots = slots;
+               StaticData.item_map.Add(slot.itemId, item);
                break;
             }
         }

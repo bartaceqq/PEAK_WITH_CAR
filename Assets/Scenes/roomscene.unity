@@ -2254,6 +2254,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49d9fe69e87f54e44bbe28b3f127f851, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!143 &2092117869 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 4598873420625441882, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+  m_PrefabInstance: {fileID: 2805472807013194012}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2100155392 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5369191375184185894, guid: 4e61c1db5ac2a1848ab326167277b769, type: 3}
@@ -2302,6 +2307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a5bce44ffe550d47b5197ec2d90c120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prefab: {fileID: 0}
   holding_item: {fileID: 1588675017}
   texture: {fileID: 2800000, guid: e472ebcb99516ac4ca204deb64cf3362, type: 3}
   item_object: {fileID: 2105026642}
@@ -2351,9 +2357,29 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 661451260}
     - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: inventory
+      value: 
+      objectReference: {fileID: 661451260}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: controller
+      value: 
+      objectReference: {fileID: 2092117869}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
       propertyPath: PlayerCanvas
       value: 
       objectReference: {fileID: 854563878}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: cursor_manager
+      value: 
+      objectReference: {fileID: 1434904293}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: items.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: 'items.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1588675017}
     - target: {fileID: 4170513107181763540, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
       propertyPath: itemstouse.Array.size
       value: 1

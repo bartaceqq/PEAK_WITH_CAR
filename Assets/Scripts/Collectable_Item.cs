@@ -1,7 +1,9 @@
+using Seagull.City_03.SceneProps;
 using UnityEngine;
 
 public class Collectable_Item : MonoBehaviour
 {
+    public PrefabGroup prefab;
     public Collectable_Item holding_item;
     [Header("Inventory & Settings")]
     public Texture texture;

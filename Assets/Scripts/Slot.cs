@@ -26,13 +26,13 @@ public class Slot : MonoBehaviour
     {
         if (Input.GetKeyDown(input))
         {
-            Debug.Log(StaticData.items[0]);
+            
             Debug.Log("Slot key pressed: " + input);
         }
         if (Input.GetKeyDown(input) && item != null)
         {
             Debug.Log("slot clicked + " + input.ToString());
-            foreach (Collectable_Item itemik in player.itemstouse)
+            foreach (Collectable_Item itemik in player.items)
             {               
                 Debug.Log(itemik.item_id + " = ID");
                 if (itemik.item_id == item.item_id)

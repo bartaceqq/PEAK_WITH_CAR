@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    public List<Collectable_Item> itemstouse = new List<Collectable_Item>();
+    public List<Collectable_Item> items = new List<Collectable_Item>();
     [Header("Shooting")]
     public Camera playerCamera;        // Assign MainCamera in Inspector
     public GameObject projectilePrefab; // Assign your projectile prefab
@@ -39,14 +40,17 @@ public class PlayerController : MonoBehaviour
     public bool lookingAtItem = false;
     public bool grabbing = false;
 
-    private CharacterController controller;
+    public CharacterController controller;
     private Vector3 velocity;
     private float pitch = 0f;
     private bool isGrounded;
 
     void Start()
     {
-        controller = GetComponent<CharacterController>();
+        TransferItem_Handler transfer_handler = new TransferItem_Handler();
+        transfer_handler.items = this.items;
+        transfer_handler.TransferItem();
+        
 
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -72,6 +76,13 @@ public class PlayerController : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             SceneManager.LoadScene(4);
+        }
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            foreach (KeyValuePair<int, Collectable_Item> entry in StaticData.item_map)
+            {
+                Debug.Log(entry.Key + " → " + entry.Value);
+            }
         }
     }
 
