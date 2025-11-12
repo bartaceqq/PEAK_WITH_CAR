@@ -5,25 +5,28 @@ public class EnemyAI : MonoBehaviour
 {
     public Animator enemy_animator;
     public int hp = 100;
+
     [Header("Player Settings")]
     public Transform player;
-    public float detectionRange = 10f;
+    public float detectionRange = 15f;
+    public float shootingRange = 5f;
     public float chaseSpeed = 5f;
-    public float idleSpeed = 2f;
 
     [Header("Avoidance Settings")]
-    public float obstacleAvoidDistance = 1.5f;   // how far to check for walls
-    public float avoidTurnSpeed = 3f;            // how fast to steer around walls
-    public LayerMask obstacleMask;               // which layers are obstacles
+    public float obstacleAvoidDistance = 1.5f;
+    public float avoidTurnSpeed = 3f;
+    public LayerMask obstacleMask;
 
-    [Header("Behaviour")]
+    [Header("Behaviour Settings")]
     public float gravity = -9.81f;
-    public float stopDistance = 1.5f;            // distance to stop from player
+    public float stopDistance = 1.5f;
 
     private CharacterController controller;
     private Vector3 velocity;
     private Vector3 moveDir;
-    private bool isChasing = false;
+
+    private enum EnemyState { Idle, Chasing, Shooting }
+    private EnemyState currentState = EnemyState.Idle;
 
     void Start()
     {
@@ -31,6 +34,8 @@ public class EnemyAI : MonoBehaviour
 
         if (!player)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        SetState(EnemyState.Idle);
     }
 
     void Update()
@@ -38,53 +43,82 @@ public class EnemyAI : MonoBehaviour
         if (!player) return;
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        isChasing = distanceToPlayer < detectionRange;
 
-        if (isChasing)
-        {
-            HandleMoving("moving");
-            ChasePlayer();
-        }
+        // --- STATE DECISION ---
+        if (distanceToPlayer > detectionRange)
+            SetState(EnemyState.Idle);
+        else if (distanceToPlayer > shootingRange)
+            SetState(EnemyState.Chasing);
         else
-            Wander();
+            SetState(EnemyState.Shooting);
+
+        // --- STATE ACTIONS ---
+        switch (currentState)
+        {
+            case EnemyState.Idle:
+                moveDir = Vector3.zero;
+                break;
+
+            case EnemyState.Chasing:
+                ChasePlayer();
+                break;
+
+            case EnemyState.Shooting:
+                moveDir = Vector3.zero;
+                RotateTowards((player.position - transform.position).normalized);
+                break;
+        }
 
         ApplyGravity();
         controller.Move((moveDir + velocity) * Time.deltaTime);
     }
 
+    // ======================
+    // == STATE MANAGEMENT ==
+    // ======================
+    void SetState(EnemyState newState)
+    {
+        if (currentState == newState) return;
+
+        currentState = newState;
+        UpdateAnimatorState();
+    }
+
+    void UpdateAnimatorState()
+    {
+        if (!enemy_animator) return;
+
+        // Reset all
+        enemy_animator.SetBool("moving", false);
+        enemy_animator.SetBool("shooting", false);
+
+        switch (currentState)
+        {
+            case EnemyState.Chasing:
+                enemy_animator.SetBool("moving", true);
+                break;
+            case EnemyState.Shooting:
+                enemy_animator.SetBool("shooting", true);
+                break;
+        }
+    }
+
+    // ======================
+    // == MOVEMENT LOGIC ====
+    // ======================
     void ChasePlayer()
     {
         Vector3 dirToPlayer = (player.position - transform.position).normalized;
 
-        // Stop if too close
         if (Vector3.Distance(transform.position, player.position) <= stopDistance)
         {
             moveDir = Vector3.zero;
             return;
         }
 
-        // Avoid walls
         Vector3 adjustedDir = AvoidObstacles(dirToPlayer);
-
-        // Move & rotate smoothly
         moveDir = adjustedDir * chaseSpeed;
         RotateTowards(adjustedDir);
-    }
-
-    public void HandleMoving(string type)
-    {
-        switch (type)
-        {
-            case "moving":
-                enemy_animator.SetTrigger("moving");
-                break;
-            
-        }
-    }
-    void Wander()
-    {
-        // Simple idle rotation (could be replaced with patrol)
-        moveDir = Vector3.zero;
     }
 
     Vector3 AvoidObstacles(Vector3 desiredDir)
@@ -92,7 +126,6 @@ public class EnemyAI : MonoBehaviour
         Ray forwardRay = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
         if (Physics.Raycast(forwardRay, out RaycastHit hit, obstacleAvoidDistance, obstacleMask))
         {
-            // When hit a wall, try to steer around it by turning a bit to the side
             Vector3 avoidDir = Vector3.Cross(hit.normal, Vector3.up);
             desiredDir = Vector3.Lerp(desiredDir, avoidDir, Time.deltaTime * avoidTurnSpeed);
         }
@@ -102,6 +135,7 @@ public class EnemyAI : MonoBehaviour
     void RotateTowards(Vector3 direction)
     {
         if (direction.sqrMagnitude < 0.001f) return;
+
         Quaternion targetRot = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
     }
@@ -114,15 +148,17 @@ public class EnemyAI : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
     }
 
+    // ======================
+    // == DEBUG GIZMOS ======
+    // ======================
     private void OnDrawGizmosSelected()
     {
-        // Visualize detection radius
-        Gizmos.color = isChasing ? Color.red : Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        if (currentState == EnemyState.Chasing) Gizmos.color = Color.red;
+        else if (currentState == EnemyState.Shooting) Gizmos.color = Color.green;
+        else Gizmos.color = Color.yellow;
 
-        // Visualize obstacle check
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawRay(transform.position + Vector3.up * 0.5f, transform.forward * obstacleAvoidDistance);
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, shootingRange);
     }
 }
-    
