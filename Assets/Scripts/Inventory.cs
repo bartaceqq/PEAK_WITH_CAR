@@ -64,7 +64,7 @@ public class Inventory : MonoBehaviour
                StaticData.items = items;
                StaticData.slotscontainssomething = true;
                StaticData.slots = slots;
-               StaticData.item_map.Add(slot.itemId, item);
+               StaticData.item_map.Add(slot.itemId, item.holding_item );
                break;
             }
         }

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - drawer
   - monitor
+  - Enemy
   layers:
   - Default
   - TransparentFX

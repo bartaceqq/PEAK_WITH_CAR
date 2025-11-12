@@ -6,49 +6,43 @@ public class Slot : MonoBehaviour
 {
     [Header("Slot Settings")]
     public Transform playerTransform;
-    public KeyCode input = KeyCode.T;  // you can assign this in Inspector (e.g. Alpha1, Alpha2, etc.)
+    public KeyCode input = KeyCode.Alpha1;   // set per-slot in Inspector
     public bool isoccupied = false;
-    public int itemId;
+    public int itemId = -1;                  // use this if item is not assigned
     public RawImage image;
     public Collectable_Item item;
     public PlayerController player;
 
-    public void Start()
+    void Start()
     {
         player = FindObjectOfType<PlayerController>();
-        if (player != null)
-            playerTransform = player.transform;
-        else
-            Debug.LogWarning("No PlayerController found in the scene!");
+        if (player != null) playerTransform = player.transform;
+        else Debug.LogWarning("[Slot] No PlayerController found in the scene!");
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(input))
+        if (!Input.GetKeyDown(input)) return;
+
+        Debug.Log($"[Slot] Key pressed: {input}");
+
+        // Determine which id to use
+        int idToUse = (item != null) ? item.item_id : itemId;
+
+        if (idToUse < 0)
         {
-            
-            Debug.Log("Slot key pressed: " + input);
+            Debug.LogWarning("[Slot] No item selected for this slot (item and itemId are not set).");
+            return;
         }
-        if (Input.GetKeyDown(input) && item != null)
+
+        if (StaticData.item_map.TryGetValue(idToUse, out var collectable))
         {
-            Debug.Log("slot clicked + " + input.ToString());
-            foreach (Collectable_Item itemik in player.items)
-            {               
-                Debug.Log(itemik.item_id + " = ID");
-                if (itemik.item_id == item.item_id)
-                {
-                    // Enable the GameObject
-                    if (itemik.gameObject != null)
-                    {
-                        itemik.holding_item.gameObject.SetActive(true);
-                    }
-
-                 
-
-                    
-                }
-            }
-
+            collectable.gameObject.SetActive(true);
+            Debug.Log($"[Slot] Activated {idToUse} → {collectable.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"[Slot] item_map does not contain id {idToUse}. Did you populate StaticData.item_map?");
         }
     }
 

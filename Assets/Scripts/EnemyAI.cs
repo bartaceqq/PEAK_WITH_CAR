@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
+    public Animator enemy_animator;
+    public int hp = 100;
     [Header("Player Settings")]
     public Transform player;
     public float detectionRange = 10f;
@@ -39,7 +41,10 @@ public class EnemyAI : MonoBehaviour
         isChasing = distanceToPlayer < detectionRange;
 
         if (isChasing)
+        {
+            HandleMoving("moving");
             ChasePlayer();
+        }
         else
             Wander();
 
@@ -66,6 +71,16 @@ public class EnemyAI : MonoBehaviour
         RotateTowards(adjustedDir);
     }
 
+    public void HandleMoving(string type)
+    {
+        switch (type)
+        {
+            case "moving":
+                enemy_animator.SetTrigger("moving");
+                break;
+            
+        }
+    }
     void Wander()
     {
         // Simple idle rotation (could be replaced with patrol)

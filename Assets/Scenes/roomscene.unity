@@ -2436,6 +2436,10 @@ PrefabInstance:
       propertyPath: cursor_manager
       value: 
       objectReference: {fileID: 1434904293}
+    - target: {fileID: 8598526942158563877, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
+      propertyPath: m_Name
+      value: Gun_holding_room
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8528330894710065749, guid: 2f3efbb15e1d1f14092896126691511e, type: 3}
     m_RemovedGameObjects: []
