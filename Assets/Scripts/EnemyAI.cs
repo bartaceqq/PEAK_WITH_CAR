@@ -1,16 +1,21 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
+    private int current_point = 0;
+    public List<Transform> waypoints;
     public Animator enemy_animator;
+
     public int hp = 100;
 
     [Header("Player Settings")]
     public Transform player;
     public float detectionRange = 15f;
     public float shootingRange = 5f;
-    public float chaseSpeed = 5f;
+    public float chaseSpeed = 7f;      // running speed
+    public float walkSpeed = 3f;       // walk speed for patrol
 
     [Header("Avoidance Settings")]
     public float obstacleAvoidDistance = 1.5f;
@@ -25,17 +30,24 @@ public class EnemyAI : MonoBehaviour
     private Vector3 velocity;
     private Vector3 moveDir;
 
-    private enum EnemyState { Idle, Chasing, Shooting }
-    private EnemyState currentState = EnemyState.Idle;
+    private enum EnemyState
+    {
+        Walk,    // patrol
+        Run,     // chase
+        Shooting
+    }
+
+    private EnemyState currentState = EnemyState.Walk;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
-
         if (!player)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        SetState(EnemyState.Idle);
+        SetState(EnemyState.Walk);
+        UpdateAnimatorState();
+        
     }
 
     void Update()
@@ -44,22 +56,28 @@ public class EnemyAI : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // --- STATE DECISION ---
+        // ------- STATE SELECTION -------
         if (distanceToPlayer > detectionRange)
-            SetState(EnemyState.Idle);
+        {
+            SetState(EnemyState.Walk);
+        }
         else if (distanceToPlayer > shootingRange)
-            SetState(EnemyState.Chasing);
+        {
+            SetState(EnemyState.Run);
+        }
         else
+        {
             SetState(EnemyState.Shooting);
+        }
 
-        // --- STATE ACTIONS ---
+        // ------- STATE BEHAVIOUR -------
         switch (currentState)
         {
-            case EnemyState.Idle:
-                moveDir = Vector3.zero;
+            case EnemyState.Walk:
+                PatrolRoute();
                 break;
 
-            case EnemyState.Chasing:
+            case EnemyState.Run:
                 ChasePlayer();
                 break;
 
@@ -73,9 +91,6 @@ public class EnemyAI : MonoBehaviour
         controller.Move((moveDir + velocity) * Time.deltaTime);
     }
 
-    // ======================
-    // == STATE MANAGEMENT ==
-    // ======================
     void SetState(EnemyState newState)
     {
         if (currentState == newState) return;
@@ -84,31 +99,80 @@ public class EnemyAI : MonoBehaviour
         UpdateAnimatorState();
     }
 
+    // -------------------------
+    //  ANIMATIONS
+    // -------------------------
     void UpdateAnimatorState()
     {
         if (!enemy_animator) return;
 
-        // Reset all
+        // reset all three
+        enemy_animator.SetBool("walking", false);
         enemy_animator.SetBool("moving", false);
         enemy_animator.SetBool("shooting", false);
 
         switch (currentState)
         {
-            case EnemyState.Chasing:
+           case EnemyState.Walk:
+               enemy_animator.SetBool("walking", true);
+           
+               // Force restart walk animation
+               enemy_animator.Play("forward", 0, 0f);
+           
+               break;
+
+
+            case EnemyState.Run:
+                // foreward -> Run01_Forward: walking = false, moving = true
                 enemy_animator.SetBool("moving", true);
+                // walking stays false
                 break;
+
             case EnemyState.Shooting:
                 enemy_animator.SetBool("shooting", true);
                 break;
         }
     }
 
-    // ======================
-    // == MOVEMENT LOGIC ====
-    // ======================
+    // -------------------------
+    //  PATROL (WALK)
+    // -------------------------
+    public void PatrolRoute()
+    {
+        if (waypoints.Count == 0) return;
+
+        Transform wp = waypoints[current_point];
+
+        float dist = Vector3.Distance(
+            new Vector3(transform.position.x, 0, transform.position.z),
+            new Vector3(wp.position.x, 0, wp.position.z)
+        );
+
+        if (dist <= stopDistance)
+        {
+            current_point++;
+            if (current_point >= waypoints.Count)
+                current_point = 0;
+
+            return;
+        }
+
+        Vector3 dir = (wp.position - transform.position).normalized;
+        dir.y = 0;
+
+        Vector3 adjustedDir = AvoidObstacles(dir);
+        moveDir = adjustedDir * walkSpeed;   // walk speed
+
+        RotateTowards(adjustedDir);
+    }
+
+    // -------------------------
+    //  CHASE (RUN)
+    // -------------------------
     void ChasePlayer()
     {
         Vector3 dirToPlayer = (player.position - transform.position).normalized;
+        dirToPlayer.y = 0;
 
         if (Vector3.Distance(transform.position, player.position) <= stopDistance)
         {
@@ -117,48 +181,44 @@ public class EnemyAI : MonoBehaviour
         }
 
         Vector3 adjustedDir = AvoidObstacles(dirToPlayer);
-        moveDir = adjustedDir * chaseSpeed;
+        moveDir = adjustedDir * chaseSpeed;  // run speed
         RotateTowards(adjustedDir);
     }
 
+    // -------------------------
+    //  OBSTACLE AVOID
+    // -------------------------
     Vector3 AvoidObstacles(Vector3 desiredDir)
     {
         Ray forwardRay = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
+
         if (Physics.Raycast(forwardRay, out RaycastHit hit, obstacleAvoidDistance, obstacleMask))
         {
             Vector3 avoidDir = Vector3.Cross(hit.normal, Vector3.up);
             desiredDir = Vector3.Lerp(desiredDir, avoidDir, Time.deltaTime * avoidTurnSpeed);
         }
+
         return desiredDir.normalized;
     }
 
+    // -------------------------
+    //  ROTATION
+    // -------------------------
     void RotateTowards(Vector3 direction)
     {
         if (direction.sqrMagnitude < 0.001f) return;
-
         Quaternion targetRot = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
     }
 
+    // -------------------------
+    //  GRAVITY
+    // -------------------------
     void ApplyGravity()
     {
         if (controller.isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
         velocity.y += gravity * Time.deltaTime;
-    }
-
-    // ======================
-    // == DEBUG GIZMOS ======
-    // ======================
-    private void OnDrawGizmosSelected()
-    {
-        if (currentState == EnemyState.Chasing) Gizmos.color = Color.red;
-        else if (currentState == EnemyState.Shooting) Gizmos.color = Color.green;
-        else Gizmos.color = Color.yellow;
-
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, shootingRange);
     }
 }
