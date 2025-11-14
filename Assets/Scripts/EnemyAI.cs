@@ -88,6 +88,16 @@ public class EnemyAI : MonoBehaviour
         }
 
         ApplyGravity();
+        // SAFETY FIX — enemy never gets stuck
+        if (moveDir.sqrMagnitude < 0.1f && currentState != EnemyState.Shooting)
+        {
+            // Recalculate fallback movement
+            if (currentState == EnemyState.Run)
+                ChasePlayer();
+            else if (currentState == EnemyState.Walk)
+                PatrolRoute();
+        }
+
         controller.Move((moveDir + velocity) * Time.deltaTime);
     }
 
@@ -190,16 +200,32 @@ public class EnemyAI : MonoBehaviour
     // -------------------------
     Vector3 AvoidObstacles(Vector3 desiredDir)
     {
-        Ray forwardRay = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
+        Vector3 origin = transform.position + Vector3.up * 0.5f;
 
-        if (Physics.Raycast(forwardRay, out RaycastHit hit, obstacleAvoidDistance, obstacleMask))
+        // forward ray
+        if (Physics.Raycast(origin, transform.forward, out RaycastHit forwardHit, obstacleAvoidDistance, obstacleMask))
         {
-            Vector3 avoidDir = Vector3.Cross(hit.normal, Vector3.up);
-            desiredDir = Vector3.Lerp(desiredDir, avoidDir, Time.deltaTime * avoidTurnSpeed);
+            // Turn AWAY from the obstacle
+            return (desiredDir + forwardHit.normal * 2f).normalized;
+        }
+
+        // left ray
+        if (Physics.Raycast(origin, -transform.right, out RaycastHit leftHit, obstacleAvoidDistance * 0.7f, obstacleMask))
+        {
+            // turn right
+            return (desiredDir + transform.right * 1.5f).normalized;
+        }
+
+        // right ray
+        if (Physics.Raycast(origin, transform.right, out RaycastHit rightHit, obstacleAvoidDistance * 0.7f, obstacleMask))
+        {
+            // turn left
+            return (desiredDir - transform.right * 1.5f).normalized;
         }
 
         return desiredDir.normalized;
     }
+
 
     // -------------------------
     //  ROTATION

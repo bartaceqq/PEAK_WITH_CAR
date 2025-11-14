@@ -6,6 +6,7 @@
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
     {
+        public int holding_item_id = 0;
         public List<Collectable_Item> items = new List<Collectable_Item>();
         [Header("Shooting")]
         public Camera playerCamera;        // Assign MainCamera in Inspector
@@ -133,11 +134,11 @@
 
         void Shoot()
         {
-            if (!playerCamera) return;
-
+            if (!playerCamera ) return;
+            if (holding_item_id != 1) return;
             Vector3 direction = playerCamera.transform.forward;
             Vector3 spawnPos = firePoint ? firePoint.position : playerCamera.transform.position;
-
+            
             GameObject bullet = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(direction));
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
             if (rb != null)

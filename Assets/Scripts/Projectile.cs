@@ -1,15 +1,20 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Projectile : MonoBehaviour
 {
-    public float speed = 60f;
+    
+    public float speed = 100f;
     public float lifeTime = 5f;
+
 
     void Start()
     {
         Destroy(gameObject, lifeTime);
+        
+        
     }
 
     void Update()

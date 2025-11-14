@@ -34,16 +34,22 @@ public class Slot : MonoBehaviour
             Debug.LogWarning("[Slot] No item selected for this slot (item and itemId are not set).");
             return;
         }
-
-        if (StaticData.item_map.TryGetValue(idToUse, out var collectable))
+        
+        if (StaticData.item_map.ContainsKey(idToUse))
         {
+            Collectable_Item collectable = StaticData.item_map[idToUse];
+            
             collectable.gameObject.SetActive(true);
-            Debug.Log($"[Slot] Activated {idToUse} → {collectable.name}");
+            
+            player.holding_item_id = idToUse;
+
+            Debug.Log("Player is now holding item ID: " + idToUse);
         }
         else
         {
-            Debug.LogWarning($"[Slot] item_map does not contain id {idToUse}. Did you populate StaticData.item_map?");
+            Debug.LogWarning("Item ID " + idToUse + " was not found in the item_map!");
         }
+
     }
 
     public void SetTexture(Texture texture)
