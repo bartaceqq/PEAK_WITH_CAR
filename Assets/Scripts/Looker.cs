@@ -50,7 +50,7 @@ public class Looker : MonoBehaviour
                   {
                       Cursor.lockState = CursorLockMode.None;  // Unlocks the mouse
                       Cursor.visible = true;  
-                      SceneManager.LoadScene(1);
+                      SceneManager.LoadScene(2);
                   }
 
                   break;

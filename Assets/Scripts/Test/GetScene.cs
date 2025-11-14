@@ -19,7 +19,7 @@ public class GetScene : MonoBehaviour
     {
         if (StaticData.items != null)
         {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(1);
         }
     }
 }
