@@ -45,13 +45,14 @@
         private Vector3 velocity;
         private float pitch = 0f;
         private bool isGrounded;
-
+        private float origospeed = 0;
+        public bool issneaking = false;
         void Start()
         {
             TransferItem_Handler transfer_handler = new TransferItem_Handler();
             transfer_handler.items = this.items;
             transfer_handler.TransferItem();
-            
+            origospeed = moveSpeed;
 
             // Lock cursor
             Cursor.lockState = CursorLockMode.Locked;
@@ -89,6 +90,16 @@
 
         void HandleMovement()
         {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                moveSpeed = runSpeed / 2;
+                issneaking = true;
+            }
+            else
+            {
+                moveSpeed = origospeed;
+                issneaking = false;
+            }
             isGrounded = controller.isGrounded;
 
             if (isGrounded && velocity.y < 0)

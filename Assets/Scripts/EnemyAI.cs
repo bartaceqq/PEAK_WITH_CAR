@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
+    public PlayerController playcont;
+    public Camera enemycam;
     private int current_point = 0;
     public List<Transform> waypoints;
     public Animator enemy_animator;
@@ -11,6 +14,7 @@ public class EnemyAI : MonoBehaviour
     public int hp = 100;
 
     [Header("Player Settings")]
+    
     public Transform player;
     public float detectionRange = 15f;
     public float shootingRange = 5f;
@@ -32,8 +36,8 @@ public class EnemyAI : MonoBehaviour
 
     private enum EnemyState
     {
-        Walk,    // patrol
-        Run,     // chase
+        Walk,    
+        Run,     
         Shooting
     }
 
@@ -50,13 +54,33 @@ public class EnemyAI : MonoBehaviour
         
     }
 
+    public bool isVisiblewhenSneaking()
+    {
+
+        
+        
+        if (!playcont.issneaking)
+            return true;
+        
+        Ray ray = new Ray(enemycam.transform.position, enemycam.transform.forward);
+        if (Physics.Raycast(ray, out RaycastHit hit, 5f))
+        {
+            if (hit.collider.CompareTag("Player"))
+                return true;  
+        }
+
+        return false;  
+    }
+
+
     void Update()
     {
         if (!player) return;
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // ------- STATE SELECTION -------
+                
+        
         if (distanceToPlayer > detectionRange)
         {
             SetState(EnemyState.Walk);
@@ -78,7 +102,11 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyState.Run:
-                ChasePlayer();
+                if (isVisiblewhenSneaking())
+                {
+                    ChasePlayer(); 
+                }
+               
                 break;
 
             case EnemyState.Shooting:
@@ -109,9 +137,7 @@ public class EnemyAI : MonoBehaviour
         UpdateAnimatorState();
     }
 
-    // -------------------------
-    //  ANIMATIONS
-    // -------------------------
+
     void UpdateAnimatorState()
     {
         if (!enemy_animator) return;
@@ -133,9 +159,18 @@ public class EnemyAI : MonoBehaviour
 
 
             case EnemyState.Run:
-                // foreward -> Run01_Forward: walking = false, moving = true
-                enemy_animator.SetBool("moving", true);
-                // walking stays false
+                if (isVisiblewhenSneaking())
+                {
+                    enemy_animator.SetBool("moving", true);
+                }
+                else
+                {
+                    enemy_animator.SetBool("walking", true);
+           
+                    // Force restart walk animation
+                    enemy_animator.Play("forward", 0, 0f);
+                }
+               
                 break;
 
             case EnemyState.Shooting:
