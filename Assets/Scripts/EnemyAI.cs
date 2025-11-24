@@ -1,44 +1,44 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
-    public PlayerController playcont;
-    public Camera enemycam;
-    private int current_point = 0;
+    public Transform target;
+    public Transform player;
     public List<Transform> waypoints;
     public Animator enemy_animator;
+    public Transform headBone;     // Assign B-spineProxy here
+    public Transform headCamera;   // Leave this too if you need it later
+
 
     public int hp = 100;
 
-    [Header("Player Settings")]
-    
-    public Transform player;
-    public float detectionRange = 15f;
+    [Header("Player Settings")] public float detectionRange = 15f;
     public float shootingRange = 5f;
-    public float chaseSpeed = 7f;      // running speed
-    public float walkSpeed = 3f;       // walk speed for patrol
+    public float chaseSpeed = 7f; // running speed
+    public float walkSpeed = 3f; // walk speed for patrol
 
-    [Header("Avoidance Settings")]
-    public float obstacleAvoidDistance = 1.5f;
+    [Header("Avoidance Settings")] public float obstacleAvoidDistance = 1.5f;
     public float avoidTurnSpeed = 3f;
     public LayerMask obstacleMask;
 
-    [Header("Behaviour Settings")]
-    public float gravity = -9.81f;
+    [Header("Behaviour Settings")] public float gravity = -9.81f;
     public float stopDistance = 1.5f;
 
     private CharacterController controller;
     private Vector3 velocity;
     private Vector3 moveDir;
+    private int current_point = 0;
+    public bool sniper = false;
+    public bool walker = false;
 
     private enum EnemyState
     {
-        Walk,    
-        Run,     
-        Shooting
+        Walk,
+        Run,
+        Shooting,
+        Sniping
     }
 
     private EnemyState currentState = EnemyState.Walk;
@@ -46,32 +46,10 @@ public class EnemyAI : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+
         if (!player)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
-        SetState(EnemyState.Walk);
-        UpdateAnimatorState();
-        
     }
-
-    public bool isVisiblewhenSneaking()
-    {
-
-        
-        
-        if (!playcont.issneaking)
-            return true;
-        
-        Ray ray = new Ray(enemycam.transform.position, enemycam.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, 5f))
-        {
-            if (hit.collider.CompareTag("Player"))
-                return true;  
-        }
-
-        return false;  
-    }
-
 
     void Update()
     {
@@ -79,11 +57,19 @@ public class EnemyAI : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-                
-        
+        // ------- STATE SELECTION -------
         if (distanceToPlayer > detectionRange)
         {
-            SetState(EnemyState.Walk);
+            if (walker)
+            {
+                SetState(EnemyState.Walk); 
+            }
+
+            if (sniper)
+            {
+                SetState(EnemyState.Sniping);
+            }
+          
         }
         else if (distanceToPlayer > shootingRange)
         {
@@ -102,41 +88,42 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyState.Run:
-                if (isVisiblewhenSneaking())
-                {
-                    ChasePlayer(); 
-                }
-               
+                ChasePlayer();
                 break;
 
             case EnemyState.Shooting:
                 moveDir = Vector3.zero;
                 RotateTowards((player.position - transform.position).normalized);
                 break;
+            case EnemyState.Sniping:
+                moveDir = Vector3.zero;
+               
+                break;
         }
 
         ApplyGravity();
+
         // SAFETY FIX — enemy never gets stuck
         if (moveDir.sqrMagnitude < 0.1f && currentState != EnemyState.Shooting)
         {
-            // Recalculate fallback movement
             if (currentState == EnemyState.Run)
                 ChasePlayer();
             else if (currentState == EnemyState.Walk)
                 PatrolRoute();
         }
 
+        // Ensure animator always matches current state (especially Shooting)
+        UpdateAnimatorState();
+
         controller.Move((moveDir + velocity) * Time.deltaTime);
     }
+    
 
     void SetState(EnemyState newState)
     {
         if (currentState == newState) return;
-
         currentState = newState;
-        UpdateAnimatorState();
     }
-
 
     void UpdateAnimatorState()
     {
@@ -149,32 +136,22 @@ public class EnemyAI : MonoBehaviour
 
         switch (currentState)
         {
-           case EnemyState.Walk:
-               enemy_animator.SetBool("walking", true);
-           
-               // Force restart walk animation
-               enemy_animator.Play("forward", 0, 0f);
-           
-               break;
-
+            case EnemyState.Walk:
+                enemy_animator.SetBool("walking", true);
+                // Force restart walk animation
+                enemy_animator.Play("forward", 0, 0f);
+                break;
 
             case EnemyState.Run:
-                if (isVisiblewhenSneaking())
-                {
-                    enemy_animator.SetBool("moving", true);
-                }
-                else
-                {
-                    enemy_animator.SetBool("walking", true);
-           
-                    // Force restart walk animation
-                    enemy_animator.Play("forward", 0, 0f);
-                }
-               
+                enemy_animator.SetBool("moving", true);
                 break;
 
             case EnemyState.Shooting:
+                // Always force shooting to be active when in shooting range
                 enemy_animator.SetBool("shooting", true);
+                break;
+            case EnemyState.Sniping:
+                enemy_animator.SetBool("aiming", true);
                 break;
         }
     }
@@ -184,36 +161,42 @@ public class EnemyAI : MonoBehaviour
     // -------------------------
     public void PatrolRoute()
     {
-        if (waypoints.Count == 0) return;
-
-        Transform wp = waypoints[current_point];
-
-        float dist = Vector3.Distance(
-            new Vector3(transform.position.x, 0, transform.position.z),
-            new Vector3(wp.position.x, 0, wp.position.z)
-        );
-
-        if (dist <= stopDistance)
+        if (walker)
         {
-            current_point++;
-            if (current_point >= waypoints.Count)
-                current_point = 0;
+            if (waypoints == null || waypoints.Count == 0) return;
 
-            return;
+            Transform wp = waypoints[current_point];
+
+            float dist = Vector3.Distance(
+                new Vector3(transform.position.x, 0, transform.position.z),
+                new Vector3(wp.position.x, 0, wp.position.z)
+            );
+
+            if (dist <= stopDistance)
+            {
+                current_point++;
+                if (current_point >= waypoints.Count)
+                    current_point = 0;
+
+                return;
+            }
+
+            Vector3 dir = (wp.position - transform.position).normalized;
+            dir.y = 0;
+
+            Vector3 adjustedDir = AvoidObstacles(dir);
+            moveDir = adjustedDir * walkSpeed; // walk speed
+
+            RotateTowards(adjustedDir);
+        } else if (sniper)
+        {
+            
         }
-
-        Vector3 dir = (wp.position - transform.position).normalized;
-        dir.y = 0;
-
-        Vector3 adjustedDir = AvoidObstacles(dir);
-        moveDir = adjustedDir * walkSpeed;   // walk speed
-
-        RotateTowards(adjustedDir);
     }
+  
 
-    // -------------------------
-    //  CHASE (RUN)
-    // -------------------------
+
+
     void ChasePlayer()
     {
         Vector3 dirToPlayer = (player.position - transform.position).normalized;
@@ -226,7 +209,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         Vector3 adjustedDir = AvoidObstacles(dirToPlayer);
-        moveDir = adjustedDir * chaseSpeed;  // run speed
+        moveDir = adjustedDir * chaseSpeed; // run speed
         RotateTowards(adjustedDir);
     }
 
@@ -245,14 +228,16 @@ public class EnemyAI : MonoBehaviour
         }
 
         // left ray
-        if (Physics.Raycast(origin, -transform.right, out RaycastHit leftHit, obstacleAvoidDistance * 0.7f, obstacleMask))
+        if (Physics.Raycast(origin, -transform.right, out RaycastHit leftHit, obstacleAvoidDistance * 0.7f,
+                obstacleMask))
         {
             // turn right
             return (desiredDir + transform.right * 1.5f).normalized;
         }
 
         // right ray
-        if (Physics.Raycast(origin, transform.right, out RaycastHit rightHit, obstacleAvoidDistance * 0.7f, obstacleMask))
+        if (Physics.Raycast(origin, transform.right, out RaycastHit rightHit, obstacleAvoidDistance * 0.7f,
+                obstacleMask))
         {
             // turn left
             return (desiredDir - transform.right * 1.5f).normalized;
@@ -260,7 +245,6 @@ public class EnemyAI : MonoBehaviour
 
         return desiredDir.normalized;
     }
-
 
     // -------------------------
     //  ROTATION
