@@ -1,55 +1,86 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class Slot : MonoBehaviour
 {
     [Header("Slot Settings")]
     public Transform playerTransform;
-    public KeyCode input = KeyCode.Alpha1;   // set per-slot in Inspector
+    public KeyCode input = KeyCode.Alpha1;
     public bool isoccupied = false;
-    public int itemId = -1;                  // use this if item is not assigned
+    public int itemId = -1;
     public RawImage image;
     public Collectable_Item item;
     public PlayerController player;
+
+    private Vector3 aimingpos = new Vector3();
+    private Vector3 holdingpos = new Vector3();
+    public bool holding = false;
 
     void Start()
     {
         player = FindObjectOfType<PlayerController>();
         if (player != null) playerTransform = player.transform;
         else Debug.LogWarning("[Slot] No PlayerController found in the scene!");
+
+        aimingpos = new Vector3(0f, -0.09f, 0.25f);
+        holdingpos = new Vector3(0.1f, -0.15f, 0.25f);
     }
 
     void Update()
     {
-        if (!Input.GetKeyDown(input)) return;
-
-        Debug.Log($"[Slot] Key pressed: {input}");
-
-        // Determine which id to use
-        int idToUse = (item != null) ? item.item_id : itemId;
-
-        if (idToUse < 0)
+        // SLOT KEY PRESS
+        if (Input.GetKeyDown(input))
         {
-            Debug.LogWarning("[Slot] No item selected for this slot (item and itemId are not set).");
-            return;
-        }
-        
-        if (StaticData.item_map.ContainsKey(idToUse))
-        {
+            int idToUse = (item != null) ? item.item_id : itemId;
+
+            if (idToUse < 0)
+            {
+                Debug.LogWarning("[Slot] No item selected for this slot.");
+                return;
+            }
+
+            if (!StaticData.item_map.ContainsKey(idToUse))
+            {
+                Debug.LogWarning("Item ID " + idToUse + " not found in map.");
+                return;
+            }
+
             Collectable_Item collectable = StaticData.item_map[idToUse];
-            
-            collectable.gameObject.SetActive(true);
-            
-            player.holding_item_id = idToUse;
 
-            Debug.Log("Player is now holding item ID: " + idToUse);
+            // ✅ toggle equip / unequip
+            if (!holding)
+            {
+                collectable.gameObject.SetActive(true);
+                player.holding_item_id = idToUse; // ✅ enable shooting
+                holding = true;
+                Debug.Log("Equipped: " + collectable.name);
+            }
+            else
+            {
+                collectable.gameObject.SetActive(false);
+                player.holding_item_id = 0;       // ✅ disable shooting
+                holding = false;
+                Debug.Log("Unequipped: " + collectable.name);
+            }
         }
-        else
+
+        // ✅ AIMING ONLY WHEN HOLDING
+        if (holding && player.holding_item_id == itemId)
         {
-            Debug.LogWarning("Item ID " + idToUse + " was not found in the item_map!");
-        }
+            Collectable_Item collectable = StaticData.item_map[itemId];
 
+            if (Input.GetMouseButton(1))
+            {
+                collectable.transform.localPosition = aimingpos;
+            }
+
+            if (Input.GetMouseButtonUp(1))
+            {
+                collectable.transform.localPosition = holdingpos;
+            }
+        }
     }
 
     public void SetTexture(Texture texture)

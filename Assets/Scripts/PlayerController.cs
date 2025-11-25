@@ -133,15 +133,36 @@
             if (cameraHolder != null)
                 cameraHolder.localRotation = Quaternion.Euler(pitch, 0f, 0f);
         }
-
+        public bool canshoot = false;
         void HandleShooting()
         {
+            // ✅ update canshoot EVERY FRAME — NOT only on Mouse0
+            canshoot = false;
+
+            foreach (Slot s in inventory.slots)
+            {
+                if (s.itemId == holding_item_id && s.holding)
+                {
+                    canshoot = true;
+                    break;
+                }
+            }
+
+            // ✅ now shooting reacts correctly
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                if (animator != null) animator.SetTrigger("Shoot");
-                Shoot();
+                Debug.Log("Mouse0 pressed | canshoot = " + canshoot);
+
+                if (canshoot)
+                {
+                    if (animator != null)
+                        animator.SetTrigger("Shoot");
+
+                    Shoot();
+                }
             }
         }
+
 
         void Shoot()
         {

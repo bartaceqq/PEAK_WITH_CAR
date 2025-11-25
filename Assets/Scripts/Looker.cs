@@ -74,7 +74,8 @@ public class Looker : MonoBehaviour
 
         if (Physics.Raycast(ray2, out hit2, rayDistance, mask))
         {
-            Collectable_Item hitItem = hit2.collider.GetComponent<Collectable_Item>();
+            Collectable_Item hitItem = hit2.collider.GetComponentInParent<Collectable_Item>();
+
             if (hitItem != null)
             {
                 
