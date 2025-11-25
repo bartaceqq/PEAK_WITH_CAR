@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class Projectile : MonoBehaviour
 {
     
-    public float speed = 100f;
+    public float speed = 1000f;
     public float lifeTime = 5f;
 
 
@@ -36,20 +36,16 @@ public class Projectile : MonoBehaviour
             Renderer rend = other.gameObject.GetComponent<Renderer>();
             rend.material.color = Color.red;
 
-            // Start coroutine that handles both wait and projectile destruction
-            StartCoroutine(WaitAndDestroy(rend));
+
+        }
+        else
+        {
+
+
+            Destroy(gameObject);
         }
     }
 
-    private IEnumerator WaitAndDestroy(Renderer renderer)
-    {
-        yield return new WaitForSeconds(0.5f);
-        if (renderer != null)
-            renderer.material.color = Color.white;
-
-        // Now destroy the projectile
-        Destroy(gameObject);
-    }
-
+ 
 
 }

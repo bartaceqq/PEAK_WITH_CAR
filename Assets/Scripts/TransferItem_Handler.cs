@@ -1,31 +1,22 @@
 using System.Collections.Generic;
-using UnityEngine;
 
-public class TransferItem_Handler : MonoBehaviour
+public static class TransferItem_Handler
 {
-    public List<Collectable_Item> items = new List<Collectable_Item>();
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static void TransferItems(List<Collectable_Item> items)
     {
-    }
+        if (StaticData.item_map == null)
+        {
+            UnityEngine.Debug.LogWarning("StaticData.item_map is NULL — nothing to transfer!");
+            return;
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-    }
+        if (items == null) return;
 
-    public void TransferItem()
-    {
         foreach (Collectable_Item item in items)
         {
-            if (StaticData.item_map != null)
-            {
-                if (StaticData.item_map.ContainsKey(item.item_id))
-                {
-                    StaticData.item_map[item.item_id] = item;
-                }
-            }
+            if (item == null) continue;
+
+            StaticData.item_map[item.item_id] = item;
         }
     }
 }

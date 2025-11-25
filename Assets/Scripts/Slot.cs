@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class Slot : MonoBehaviour
 {
     [Header("Slot Settings")]
+    public Cursor_Manager cursor;
     public Transform playerTransform;
     public KeyCode input = KeyCode.Alpha1;
     public bool isoccupied = false;
@@ -21,8 +21,10 @@ public class Slot : MonoBehaviour
     void Start()
     {
         player = FindObjectOfType<PlayerController>();
-        if (player != null) playerTransform = player.transform;
-        else Debug.LogWarning("[Slot] No PlayerController found in the scene!");
+        if (player != null)
+            playerTransform = player.transform;
+        else
+            Debug.LogWarning("[Slot] No PlayerController found in the scene!");
 
         aimingpos = new Vector3(0f, -0.09f, 0.25f);
         holdingpos = new Vector3(0.1f, -0.15f, 0.25f);
@@ -41,45 +43,50 @@ public class Slot : MonoBehaviour
                 return;
             }
 
-            if (!StaticData.item_map.ContainsKey(idToUse))
+            Collectable_Item collectable = GetItemFromPlayer(idToUse);
+
+            if (collectable == null)
             {
-                Debug.LogWarning("Item ID " + idToUse + " not found in map.");
+                Debug.LogWarning("Item with ID " + idToUse + " not found in player items.");
                 return;
             }
-
-            Collectable_Item collectable = StaticData.item_map[idToUse];
 
             // ✅ toggle equip / unequip
             if (!holding)
             {
                 collectable.gameObject.SetActive(true);
-                player.holding_item_id = idToUse; // ✅ enable shooting
+                player.holding_item_id = idToUse;
                 holding = true;
+
+               
+
                 Debug.Log("Equipped: " + collectable.name);
             }
             else
             {
                 collectable.gameObject.SetActive(false);
-                player.holding_item_id = 0;       // ✅ disable shooting
+                player.holding_item_id = 0;
                 holding = false;
+
+         
+
                 Debug.Log("Unequipped: " + collectable.name);
             }
         }
 
-        // ✅ AIMING ONLY WHEN HOLDING
+        // ✅ ONLY handle item positioning now
         if (holding && player.holding_item_id == itemId)
         {
-            Collectable_Item collectable = StaticData.item_map[itemId];
+            Collectable_Item collectable = GetItemFromPlayer(itemId);
+
+            if (collectable == null)
+                return;
 
             if (Input.GetMouseButton(1))
-            {
                 collectable.transform.localPosition = aimingpos;
-            }
 
             if (Input.GetMouseButtonUp(1))
-            {
                 collectable.transform.localPosition = holdingpos;
-            }
         }
     }
 
@@ -88,5 +95,16 @@ public class Slot : MonoBehaviour
         image.texture = texture;
         isoccupied = true;
         image.enabled = true;
+    }
+
+    // ✅ NEW helper (only change)
+    private Collectable_Item GetItemFromPlayer(int id)
+    {
+        foreach (var i in player.items)
+        {
+            if (i != null && i.item_id == id)
+                return i;
+        }
+        return null;
     }
 }

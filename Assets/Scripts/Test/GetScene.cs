@@ -17,9 +17,8 @@ public class GetScene : MonoBehaviour
 
     public void MoveToScene()
     {
-        if (StaticData.items != null)
-        {
+        
             SceneManager.LoadScene(1);
-        }
+        
     }
 }

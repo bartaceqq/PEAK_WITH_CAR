@@ -49,12 +49,10 @@
         public bool issneaking = false;
         void Start()
         {
-            TransferItem_Handler transfer_handler = new TransferItem_Handler();
-            transfer_handler.items = this.items;
-            transfer_handler.TransferItem();
+            TransferItem_Handler.TransferItems(items);
+
             origospeed = moveSpeed;
 
-            // Lock cursor
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
